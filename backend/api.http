@@ -1,0 +1,53 @@
+### Test Server
+GET http://localhost:5000
+
+
+### Register Admin
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Admin",
+  "lastName": "User",
+  "email": "admin@example.com",
+  "password": "123456",
+  "role": "admin"
+}
+
+###
+
+### Login
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "123456"
+}
+
+### Admin Dashboard
+GET http://localhost:5000/api/dashboard/admin
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNzFjOWMyMGE3M2M1ZjBhN2E1YzkxOSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4NTg0MjcwMSwiZXhwIjoxNzg2NDQ3NTAxfQ.IkB0XItEXZVRqUfhAuu-yAKMq7CaJUWdgobhksdAIcg
+###
+
+### Get Students - Page 1
+GET http://localhost:5000/api/students?page=1&limit=10
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNzFjOWMyMGE3M2M1ZjBhN2E1YzkxOSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4NTg0MjcwMSwiZXhwIjoxNzg2NDQ3NTAxfQ.IkB0XItEXZVRqUfhAuu-yAKMq7CaJUWdgobhksdAIcg
+
+###
+
+### Search Students
+GET http://localhost:5000/api/students?search=ADM
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNzFjOWMyMGE3M2M1ZjBhN2E1YzkxOSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4NTg0MjcwMSwiZXhwIjoxNzg2NDQ3NTAxfQ.IkB0XItEXZVRqUfhAuu-yAKMq7CaJUWdgobhksdAIcg
+
+###
+
+### Get Teachers - Page 1
+GET http://localhost:5000/api/teachers?page=1&limit=10
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNzFjOWMyMGE3M2M1ZjBhN2E1YzkxOSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4NTg0MjEyMSwiZXhwIjoxNzg2NDQ2OTIxfQ.SQvk_BJSa9gJ98hsjT1PK2rITtbFHcOj3HBew_DjGHM
+
+###
+
+### Search Teachers
+GET http://localhost:5000/api/teachers?search=Science
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNzFjOWMyMGE3M2M1ZjBhN2E1YzkxOSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4NTg0MjEyMSwiZXhwIjoxNzg2NDQ2OTIxfQ.SQvk_BJSa9gJ98hsjT1PK2rITtbFHcOj3HBew_DjGHM
