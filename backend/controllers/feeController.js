@@ -1,4 +1,4 @@
-import Fee from "../models/Fee.js";
+import Fee from "../models/fee.js";
 
 export const createFee = async (req, res) => {
     try {

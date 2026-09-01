@@ -1,10 +1,10 @@
-import Student from "../models/Student.js";
-import Teacher from "../models/Teacher.js";
-import ClassModel from "../models/Class.js";
-import Subject from "../models/Subject.js";
-import Attendance from "../models/Attendance.js";
-import Exam from "../models/Exam.js";
-import Fee from "../models/Fee.js";
+import Student from "../models/student.js";
+import Teacher from "../models/teacher.js";
+import ClassModel from "../models/class.js";
+import Subject from "../models/subject.js";
+import Attendance from "../models/attendance.js";
+import Exam from "../models/exam.js";
+import Fee from "../models/fee.js";
 
 export const getAdminDashboard = async (req, res) => {
     try {

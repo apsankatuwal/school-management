@@ -1,4 +1,4 @@
-import Exam from "../models/Exam.js";
+import Exam from "../models/exam.js";
 
 export const createExam = async (req, res) => {
     try {

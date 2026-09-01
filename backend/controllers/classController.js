@@ -1,4 +1,4 @@
-import ClassModel from "../models/Class.js";
+import ClassModel from "../models/class.js";
 
 export const createClass = async (req, res) => {
     try {
