@@ -20,8 +20,15 @@ const run = async () => {
 
     const existing = await User.findOne({ email });
     if (existing) {
-        console.log(`A user with email ${email} already exists (role: ${existing.role}). Nothing to do.`);
-        process.exit(0);
+        if (existing.role === "admin") {
+            console.log(`An admin with email ${email} already exists. Nothing to do.`);
+            process.exit(0);
+        }
+
+        console.error(
+            `Seed admin email already exists with role ${existing.role}. Choose a different SEED_ADMIN_EMAIL.`
+        );
+        process.exit(1);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);

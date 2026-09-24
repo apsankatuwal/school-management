@@ -1,5 +1,7 @@
 import bcrypt from "bcrypt";
 import User from "../models/user.js";
+import Student from "../models/student.js";
+import Teacher from "../models/teacher.js";
 
 // Only reachable by an already-logged-in admin (enforced in the route file).
 // This is the ONLY place in the whole app where a role gets assigned to a new account.
@@ -139,6 +141,18 @@ export const deleteUser = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "You cannot delete your own account",
+            });
+        }
+
+        const [studentProfile, teacherProfile] = await Promise.all([
+            Student.findOne({ user: req.params.id }).select("_id"),
+            Teacher.findOne({ user: req.params.id }).select("_id"),
+        ]);
+
+        if (studentProfile || teacherProfile) {
+            return res.status(409).json({
+                success: false,
+                message: "Cannot delete a user linked to a student or teacher profile. Delete the profile first.",
             });
         }
 
