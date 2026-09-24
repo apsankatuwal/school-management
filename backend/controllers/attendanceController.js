@@ -11,10 +11,7 @@ export const markAttendance = async (req, res) => {
             attendance,
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -26,19 +23,42 @@ export const getAttendance = async (req, res) => {
             .populate("class")
             .populate("subject");
 
-        res.json({
-            success: true,
-            attendance,
-        });
+        res.json({ success: true, attendance });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// NEW — only this student's own attendance, never anyone else's
+export const updateAttendance = async (req, res) => {
+    try {
+        const attendance = await Attendance.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+        });
+
+        if (!attendance) {
+            return res.status(404).json({ success: false, message: "Attendance record not found" });
+        }
+
+        res.json({ success: true, message: "Attendance updated successfully", attendance });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const deleteAttendance = async (req, res) => {
+    try {
+        const attendance = await Attendance.findByIdAndDelete(req.params.id);
+
+        if (!attendance) {
+            return res.status(404).json({ success: false, message: "Attendance record not found" });
+        }
+
+        res.json({ success: true, message: "Attendance deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export const getMyAttendance = async (req, res) => {
     try {
         const student = await Student.findOne({ user: req.user._id });
@@ -72,9 +92,6 @@ export const getMyAttendance = async (req, res) => {
             },
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
