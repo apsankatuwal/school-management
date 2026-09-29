@@ -2,6 +2,14 @@ import bcrypt from "bcrypt";
 import User from "../models/user.js";
 import Student from "../models/student.js";
 
+const generateAdmissionNumber = async () => {
+    const year = new Date().getFullYear();
+    const count = await Student.countDocuments({
+        admissionNumber: { $regex: `^ADM-${year}-` },
+    });
+    return `ADM-${year}-${String(count + 1).padStart(4, "0")}`;
+};
+
 export const createStudent = async (req, res) => {
     try {
         const {
@@ -44,7 +52,7 @@ export const createStudent = async (req, res) => {
         try {
             student = await Student.create({
                 user: user._id,
-                admissionNumber,
+                admissionNumber: admissionNumber || (await generateAdmissionNumber()),
                 className,
                 section,
                 rollNumber,
@@ -56,6 +64,14 @@ export const createStudent = async (req, res) => {
             });
         } catch (studentError) {
             await User.findByIdAndDelete(user._id);
+
+            if (studentError.code === 11000) {
+                return res.status(400).json({
+                    success: false,
+                    message: "That admission number is already in use — try another, or leave it blank to auto-generate one.",
+                });
+            }
+
             throw studentError;
         }
 
@@ -125,7 +141,6 @@ export const getStudentById = async (req, res) => {
     }
 };
 
-// NEW — a student looking up their own profile. No :id needed, it comes from their token.
 export const getMyProfile = async (req, res) => {
     try {
         const student = await Student.findOne({ user: req.user._id }).populate(
@@ -178,6 +193,12 @@ export const updateStudent = async (req, res) => {
             student: updatedStudent,
         });
     } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({
+                success: false,
+                message: "That admission number is already in use.",
+            });
+        }
         res.status(500).json({ success: false, message: error.message });
     }
 };

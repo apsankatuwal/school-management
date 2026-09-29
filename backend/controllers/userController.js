@@ -9,6 +9,14 @@ export const createUser = async (req, res) => {
     try {
         const { firstName, lastName, email, password, role, phone } = req.body;
 
+        if (role !== "admin") {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Use the Students or Teachers tab to create student or teacher accounts — it sets up their full profile in one step. This form is for admin accounts only.",
+            });
+        }
+
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({
