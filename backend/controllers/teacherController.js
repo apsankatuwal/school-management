@@ -34,7 +34,7 @@ export const createTeacher = async (req, res) => {
             email,
             password: hashedPassword,
             phone,
-            role: "teacher", // hard-coded on purpose — this endpoint can only ever create teachers
+            role: "teacher",
         });
 
         let teacher;
