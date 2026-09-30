@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import User from "../models/user.js";
 import Student from "../models/student.js";
+import ClassModel from "../models/class.js";
 
 const generateAdmissionNumber = async () => {
     const year = new Date().getFullYear();
@@ -18,9 +19,7 @@ export const createStudent = async (req, res) => {
             email,
             password,
             phone,
-            admissionNumber,
-            className,
-            section,
+            class: classId,
             rollNumber,
             gender,
             dateOfBirth,
@@ -28,6 +27,15 @@ export const createStudent = async (req, res) => {
             guardianName,
             guardianPhone,
         } = req.body;
+
+        if (!classId) {
+            return res.status(400).json({ success: false, message: "Please select a class." });
+        }
+
+        const classDoc = await ClassModel.findById(classId);
+        if (!classDoc) {
+            return res.status(400).json({ success: false, message: "That class no longer exists." });
+        }
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -52,9 +60,8 @@ export const createStudent = async (req, res) => {
         try {
             student = await Student.create({
                 user: user._id,
-                admissionNumber: admissionNumber || (await generateAdmissionNumber()),
-                className,
-                section,
+                admissionNumber: await generateAdmissionNumber(),
+                class: classId,
                 rollNumber,
                 gender,
                 dateOfBirth,
@@ -64,18 +71,15 @@ export const createStudent = async (req, res) => {
             });
         } catch (studentError) {
             await User.findByIdAndDelete(user._id);
-
-            if (studentError.code === 11000) {
-                return res.status(400).json({
-                    success: false,
-                    message: "That admission number is already in use — try another, or leave it blank to auto-generate one.",
-                });
-            }
-
             throw studentError;
         }
 
-        const populatedStudent = await student.populate("user", "-password");
+        await ClassModel.findByIdAndUpdate(classId, { $addToSet: { students: student._id } });
+
+        const populatedStudent = await student.populate([
+            { path: "user", select: "-password" },
+            { path: "class" },
+        ]);
 
         res.status(201).json({
             success: true,
@@ -95,18 +99,13 @@ export const getAllStudents = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const searchQuery = search
-            ? {
-                  $or: [
-                      { admissionNumber: { $regex: search, $options: "i" } },
-                      { className: { $regex: search, $options: "i" } },
-                      { section: { $regex: search, $options: "i" } },
-                  ],
-              }
+            ? { admissionNumber: { $regex: search, $options: "i" } }
             : {};
 
         const [students, totalStudents] = await Promise.all([
             Student.find(searchQuery)
                 .populate("user", "-password")
+                .populate("class")
                 .skip(skip)
                 .limit(limit),
             Student.countDocuments(searchQuery),
@@ -129,7 +128,9 @@ export const getAllStudents = async (req, res) => {
 
 export const getStudentById = async (req, res) => {
     try {
-        const student = await Student.findById(req.params.id).populate("user", "-password");
+        const student = await Student.findById(req.params.id)
+            .populate("user", "-password")
+            .populate("class");
 
         if (!student) {
             return res.status(404).json({ success: false, message: "Student not found" });
@@ -143,10 +144,9 @@ export const getStudentById = async (req, res) => {
 
 export const getMyProfile = async (req, res) => {
     try {
-        const student = await Student.findOne({ user: req.user._id }).populate(
-            "user",
-            "-password"
-        );
+        const student = await Student.findOne({ user: req.user._id })
+            .populate("user", "-password")
+            .populate("class");
 
         if (!student) {
             return res.status(404).json({
@@ -168,7 +168,7 @@ export const updateStudent = async (req, res) => {
             return res.status(404).json({ success: false, message: "Student not found" });
         }
 
-        const { firstName, lastName, email, phone, password, ...profileFields } = req.body;
+        const { firstName, lastName, email, phone, password, class: newClassId, ...profileFields } = req.body;
 
         const userUpdate = {};
         if (firstName) userUpdate.firstName = firstName;
@@ -181,11 +181,26 @@ export const updateStudent = async (req, res) => {
             await User.findByIdAndUpdate(student.user, userUpdate, { runValidators: true });
         }
 
+        const studentUpdate = { ...profileFields };
+
+        if (newClassId && String(newClassId) !== String(student.class)) {
+            const classDoc = await ClassModel.findById(newClassId);
+            if (!classDoc) {
+                return res.status(400).json({ success: false, message: "That class no longer exists." });
+            }
+
+            await ClassModel.findByIdAndUpdate(student.class, { $pull: { students: student._id } });
+            await ClassModel.findByIdAndUpdate(newClassId, { $addToSet: { students: student._id } });
+            studentUpdate.class = newClassId;
+        }
+
         const updatedStudent = await Student.findByIdAndUpdate(
             req.params.id,
-            profileFields,
+            studentUpdate,
             { new: true, runValidators: true }
-        ).populate("user", "-password");
+        )
+            .populate("user", "-password")
+            .populate("class");
 
         res.status(200).json({
             success: true,
@@ -211,6 +226,7 @@ export const deleteStudent = async (req, res) => {
             return res.status(404).json({ success: false, message: "Student not found" });
         }
 
+        await ClassModel.findByIdAndUpdate(student.class, { $pull: { students: student._id } });
         await User.findByIdAndDelete(student.user);
 
         res.status(200).json({ success: true, message: "Student deleted successfully" });
